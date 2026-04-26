@@ -1,0 +1,22 @@
+# Ignore Java compiled files
+*.class
+target/
+bin/
+
+# Ignore IDE specific files
+.idea/
+.settings/
+.project/
+.classpath/
+*.iml
+*.iws
+
+# Ignore OS files
+Thumbs.db
+Desktop.ini
+
+# Ignore Frontend junk (for when your teammate joins)
+node_modules/
+dist/
+build/
+.env

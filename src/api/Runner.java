@@ -1,0 +1,1 @@
+package api; public class Runner { public static void main(String[] args) { try { ApiServer.startServer(); Thread.sleep(10000); } catch (Exception e) {} } }

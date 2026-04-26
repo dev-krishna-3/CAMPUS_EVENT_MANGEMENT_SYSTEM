@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "java: compile src package app",
+            "type": "shell",
+            "command": "javac -cp \".;src\\lib\\*\" -d bin src\\db\\*.java src\\model\\*.java src\\service\\*.java src\\api\\*.java src\\main\\main.java",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$javac"
+            ]
+        }
+    ]
+}
