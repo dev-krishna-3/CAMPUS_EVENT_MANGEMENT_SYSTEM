@@ -30,7 +30,7 @@ public class AuditService {
         }
     }
 
-    public void viewAuditLogs() {
+    public List<AuditLog> getAuditLogs() {
         List<AuditLog> logs = new ArrayList<>();
         try (Connection con = DBConnection.getConnection();
                 PreparedStatement ps = con.prepareStatement(LIST_AUDIT_SQL);
@@ -43,11 +43,15 @@ public class AuditService {
                         rs.getString("details"),
                         rs.getString("created_at")));
             }
-            printLogs(logs);
         } catch (SQLException ex) {
-            System.out.println("[ERROR] viewAuditLogs failed: " + ex.getMessage());
-            printLogs(logs);
+            System.out.println("[ERROR] getAuditLogs failed: " + ex.getMessage());
         }
+        return logs;
+    }
+
+    public void viewAuditLogs() {
+        List<AuditLog> logs = getAuditLogs();
+        printLogs(logs);
     }
 
     private void printLogs(List<AuditLog> logs) {

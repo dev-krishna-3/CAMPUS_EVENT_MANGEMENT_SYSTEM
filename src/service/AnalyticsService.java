@@ -44,7 +44,7 @@ public class AnalyticsService {
             "LEFT JOIN feedback f ON f.event_id = e.id " +
             "LEFT JOIN registrations r ON r.event_id = e.id " +
             "WHERE e.title LIKE ? " +
-            "GROUP BY e.id, YEAR(e.event_date) " +
+            "GROUP BY e.id, e.title, c.name, e.capacity, e.available_seats, YEAR(e.event_date) " +
             "ORDER BY year DESC";
 
     // Improvement tips

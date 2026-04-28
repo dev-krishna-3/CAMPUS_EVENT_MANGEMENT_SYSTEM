@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#6555ff"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Admin Dashboard | EVENTORA</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/src/styles.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <!-- Background Glow -->
+  <div style="position: fixed; top: 20%; left: 10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(101,85,255,0.05) 0%, transparent 70%); z-index: -2; pointer-events: none;"></div>
+  <div style="position: fixed; bottom: 10%; right: 5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(0,220,130,0.03) 0%, transparent 70%); z-index: -2; pointer-events: none;"></div>
+
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="brand"><img src="/logo.png" alt="Logo" style="height: 28px; width: auto; margin-right: 8px; vertical-align: middle; border-radius: 4px;"> EVENTORA</div>
+      <nav class="nav-links">
+        <button class="nav-btn active" onclick="showTab('events')"><i class="fas fa-calendar-plus"></i> Events</button>
+        <button class="nav-btn" onclick="showTab('analytics')"><i class="fas fa-chart-pie"></i> Analytics</button>
+        <button class="nav-btn" onclick="showTab('volunteers')"><i class="fas fa-users-cog"></i> Volunteers</button>
+        <button class="nav-btn" onclick="showTab('qr')"><i class="fas fa-qrcode"></i> Check-in</button>
+        <button class="nav-btn" onclick="showTab('history')"><i class="fas fa-history"></i> History</button>
+        <button class="nav-btn" onclick="showTab('feedback')"><i class="fas fa-comment-dots"></i> Feedback</button>
+        <button class="nav-btn logout" onclick="window.doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-nav">
+        <div>
+          <p class="section-title" style="margin-bottom: 4px;">Admin Portal</p>
+          <h2 class="card-title">Event Command Center</h2>
+        </div>
+        <div class="avatar-wrapper">
+          <button class="theme-switch" onclick="toggleTheme()" title="Toggle Light/Dark Mode">
+            <i class="fas fa-moon" id="themeIcon"></i>
+          </button>
+          <div class="avatar-ring">
+            <div id="userInitials">AD</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- EVENTS TAB -->
+      <section id="tab-events" class="tab-content">
+        
+        <!-- Bento Box Hero & Stats -->
+        <div class="bento-grid">
+          <!-- Hero Card (Span 2) -->
+          <div class="card bento-span-2" style="display:flex; flex-direction:column; justify-content:center; padding: 30px;">
+            <div class="blob blob-purple"></div>
+            <span class="pill pill-green" style="align-self:flex-start; margin-bottom: 1rem;">ADMIN COMMAND CENTER</span>
+            <h1 class="hero-title">Campus Events.<br><span class="gradient-text" id="typewriter">Manage.</span><span class="cursor" style="color:var(--text);animation:pulse 1s infinite;">|</span></h1>
+            <p style="margin-bottom: 1.5rem; max-width: 80%;">Create, monitor, and optimize campus events. Track attendance, manage volunteers, and deliver exceptional experiences.</p>
+            <div style="display:flex; gap: 1rem;">
+              <button class="btn" onclick="document.getElementById('evTitle').focus()"><i class="fas fa-plus-circle"></i> New Event</button>
+              <button class="btn btn-outline" onclick="showTab('analytics');document.querySelectorAll('.nav-btn')[1].click();"><i class="fas fa-chart-pie"></i> Analytics</button>
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+            <div class="blob blob-green" style="top:-10px; right:-10px; bottom:auto;"></div>
+            <p class="section-title">Total Events</p>
+            <div class="stat-num counter" data-target="0" id="stat-events">0</div>
+            <p style="font-size: 12px; margin-top: 8px;"><i class="fas fa-calendar-check" style="color:var(--green)"></i> Active on platform</p>
+          </div>
+          
+          <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+            <p class="section-title">Registrations</p>
+            <div class="stat-num counter" data-target="0" id="stat-regs">0</div>
+            <p style="font-size: 12px; margin-top: 8px;"><i class="fas fa-users" style="color:var(--purple)"></i> Total students</p>
+          </div>
+        </div>
+
+        <!-- Motivational Quote -->
+        <div class="card" style="margin-bottom: 1.5rem; padding: 16px 24px; display:flex; align-items:center; gap: 16px; border-left: 3px solid var(--purple);">
+          <i class="fas fa-quote-left" style="font-size: 24px; color: var(--purple); opacity: 0.5;"></i>
+          <div>
+            <p id="adminQuote" style="color:var(--text); font-size: 14px; font-weight: 500; font-style: italic; margin:0;">"Great events don't happen by accident — they're orchestrated by great organizers."</p>
+            <p style="font-size: 11px; margin: 4px 0 0 0; color:var(--text-dim);">— EVENTORA Platform</p>
+          </div>
+        </div>
+
+        <!-- Create Event Form -->
+        <div class="card">
+          <div class="blob blob-purple"></div>
+          <h3 class="card-title" style="margin-bottom: 1rem;"><i class="fas fa-plus-circle" style="color:var(--green); margin-right:8px;"></i>Create New Event</h3>
+          <div class="grid-3" style="margin-bottom:0;">
+            <input type="text" id="evTitle" placeholder="Event Title">
+            <input type="text" id="evVenue" placeholder="Venue">
+            <input type="number" id="evCapacity" placeholder="Capacity">
+            <select id="evCat"></select>
+            <input type="datetime-local" id="evDate">
+            <button class="btn" onclick="publishNewEvent()">Publish Event</button>
+          </div>
+        </div>
+
+        <!-- Managed Events -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <h3 class="card-title" style="margin-bottom: 1rem;"><i class="fas fa-layer-group" style="color:var(--amber); margin-right:8px;"></i>Managed Events</h3>
+          <div id="eventsList" class="grid-3"></div>
+        </div>
+      </section>
+
+      <!-- ANALYTICS TAB -->
+      <section id="tab-analytics" class="tab-content" style="display:none;">
+        <div class="card">
+          <div class="blob blob-green"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+            <h3 class="card-title">Event Analytics</h3>
+            <select id="analyticsEvent" style="width:250px; margin:0;" onchange="loadAnalyticsData()"></select>
+          </div>
+          
+          <div class="bento-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 1rem;" id="analyticsStats">
+            <p class="empty-state" style="grid-column: span 3;">Select an event to view insights.</p>
+          </div>
+          
+          <div style="max-width: 400px; margin: 2rem auto; padding: 20px; background: rgba(0,0,0,0.1); border-radius: 14px;">
+            <canvas id="analyticsChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- VOLUNTEERS TAB -->
+      <section id="tab-volunteers" class="tab-content" style="display:none;">
+        <div class="grid-2">
+          <!-- Policy & Teams -->
+          <div class="card">
+            <div class="blob blob-purple"></div>
+            <h3 class="card-title" style="margin-bottom: 1rem;">Policies & Teams</h3>
+            <select id="volSetupEvent"></select>
+            
+            <div style="display:flex; gap:0.5rem;">
+              <select id="volType" style="flex:1; margin-bottom:0;" onchange="toggleClubSelect()">
+                <option value="OPEN">Open Entry</option>
+                <option value="CLUB_ONLY">Club Only</option>
+              </select>
+              <select id="volClub" style="flex:1; display:none; margin-bottom:0;"></select>
+              <input type="number" id="volMax" placeholder="Max Vols" style="flex:1; margin-bottom:0;">
+              <button class="btn" onclick="savePolicy()" style="flex:1;">Save</button>
+            </div>
+            
+            <hr style="border:0; border-top:1px solid var(--border); margin: 1.5rem 0;">
+            
+            <div style="display:flex; gap:0.5rem;">
+              <input type="text" id="teamName" placeholder="Team Name" style="flex:2; margin-bottom:0;">
+              <input type="number" id="teamMax" placeholder="Size" style="flex:1; margin-bottom:0;">
+              <button class="btn btn-outline" onclick="createTeam()" style="flex:1;">Add</button>
+            </div>
+          </div>
+
+          <!-- Tasks -->
+          <div class="card">
+            <div class="blob blob-green"></div>
+            <h3 class="card-title" style="margin-bottom: 1rem;">Assign Task</h3>
+            <select id="taskEvent"></select>
+            <div style="display:flex; gap:0.5rem;">
+              <input type="number" id="taskUserId" placeholder="User ID" style="flex:1;">
+              <input type="text" id="taskTitle" placeholder="Task Title" style="flex:2;">
+            </div>
+            <textarea id="taskDesc" placeholder="Task Description..." style="min-height:60px;"></textarea>
+            <button class="btn" onclick="assignTask()" style="width:100%">Assign Task</button>
+          </div>
+
+          <!-- Vol Attendance -->
+          <div class="card">
+            <h3 class="card-title" style="margin-bottom: 1rem;">Volunteer Attendance</h3>
+            <select id="volCheckinEvent"></select>
+            <input type="number" id="volUserId" placeholder="Volunteer User ID">
+            <div style="display:flex; gap:1rem;">
+              <button class="btn" onclick="adminVolCheckin()" style="flex:1;">Check In</button>
+              <button class="btn btn-danger" onclick="adminVolCheckout()" style="flex:1;">Check Out</button>
+            </div>
+          </div>
+
+          <!-- Apps & Reports -->
+          <div class="card">
+            <h3 class="card-title" style="margin-bottom: 1rem;">Review Applications</h3>
+            <select id="appEvent" onchange="loadApps()"></select>
+            <div id="appsList" class="feed-list" style="max-height:300px; overflow-y:auto;"></div>
+          </div>
+          
+          <div class="card bento-span-2">
+            <h3 class="card-title" style="margin-bottom: 1rem;">Generate Report</h3>
+            <div style="display:flex; gap:1rem; align-items:center;">
+              <select id="reportEvent" style="flex:2; margin:0;"></select>
+              <button class="btn" onclick="genReport()" style="flex:1;">Generate</button>
+            </div>
+            <div id="reportBox" class="bento-grid" style="grid-template-columns: 1fr 1fr; margin-top:1rem; margin-bottom:0;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHECK-IN & QR SCANNER TAB -->
+      <section id="tab-qr" class="tab-content" style="display:none;">
+        <div class="grid-2">
+          <div class="card">
+            <div class="blob blob-purple"></div>
+            <h3 class="card-title" style="margin-bottom: 1rem;">QR Camera Scanner</h3>
+            <div style="display:flex; gap:2rem; flex-wrap:wrap;">
+              <div id="reader" style="width: 100%; border-radius: var(--radius-card); overflow: hidden; border: 1px solid var(--border);"></div>
+              <div style="flex: 1; min-width: 100%;">
+                <div class="card" style="min-height: 100px; background: rgba(0,0,0,0.1); border:none;">
+                  <p class="section-title">Scan Result</p>
+                  <div id="qrResult" style="color:var(--text); font-weight:600;">Waiting for camera...</div>
+                </div>
+                <div style="display:flex; gap:1rem; margin-top:1rem;">
+                  <button class="btn" onclick="startQR()" style="flex:1"><i class="fas fa-camera"></i> Start Scanner</button>
+                  <button class="btn btn-danger" onclick="stopQR()" style="flex:1"><i class="fas fa-stop"></i> Stop</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="blob blob-green"></div>
+            <h3 class="card-title" style="margin-bottom: 1rem;">Manual Student Check-in</h3>
+            <select id="manualCheckinEvent"></select>
+            <input type="number" id="manualCheckinUserId" placeholder="User ID (e.g. 1)">
+            <button class="btn" onclick="manualCheckin()" style="width:100%;">Submit Check-in</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- HISTORY TAB -->
+      <section id="tab-history" class="tab-content" style="display:none;">
+        <div class="card">
+          <div class="blob blob-purple"></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:1rem; align-items:center;">
+            <h3 class="card-title">Event History</h3>
+            <button class="btn btn-outline" onclick="loadHistory()"><i class="fas fa-sync"></i> Reload</button>
+          </div>
+          <div id="historyBox" class="feed-list" style="max-height: 400px; overflow-y:auto;">
+            <p class="empty-state">Click reload to view historical data.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEEDBACK TAB -->
+      <section id="tab-feedback" class="tab-content" style="display:none;">
+        <div class="card">
+          <div class="blob blob-green"></div>
+          <h3 class="card-title" style="margin-bottom: 1rem;">Event Feedback Reviews</h3>
+          <select id="viewFeedbackEvent" onchange="loadFeedback()"></select>
+          <div id="feedbackBox" class="feed-list" style="max-height:400px; overflow-y:auto;">
+            <p class="empty-state">Select an event to view feedback.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import { requireAuth, logout, request, toast, loadEvents, loadCategories, loadClubs, populateSelect, populateEventSelects, fmtSqlDate } from '/src/api.js';
+    
+    const user = requireAuth();
+    if (user && user.role !== 'admin') location.href = '/login.html';
+
+    window.doLogout = logout;
+
+    // --- THEME TOGGLE ---
+    window.toggleTheme = () => {
+      const isLight = document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      const icon = document.getElementById('themeIcon');
+      icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+      
+      // Update chart colors if exists
+      if(chartInstance) loadAnalyticsData();
+    };
+    if(localStorage.getItem('theme') === 'light') { window.toggleTheme(); }
+
+    // Tabs
+    window.showTab = (id) => {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.getElementById('tab-' + id).style.display = 'block';
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      if (id === 'history') loadHistory();
+    };
+
+    // --- TYPEWRITER EFFECT ---
+    const words = ["Manage.", "Analyze.", "Organize.", "Lead.", "Inspire."];
+    let wIdx = 0, charIdx = 0, isDeleting = false, twEl = document.getElementById('typewriter');
+    function typeEffect() {
+      const currentWord = words[wIdx];
+      if (isDeleting) {
+        twEl.innerText = currentWord.substring(0, charIdx - 1);
+        charIdx--;
+      } else {
+        twEl.innerText = currentWord.substring(0, charIdx + 1);
+        charIdx++;
+      }
+      let speed = isDeleting ? 50 : 100;
+      if (!isDeleting && charIdx === currentWord.length) {
+        speed = 2000; isDeleting = true;
+      } else if (isDeleting && charIdx === 0) {
+        isDeleting = false; wIdx = (wIdx + 1) % words.length; speed = 500;
+      }
+      setTimeout(typeEffect, speed);
+    }
+    setTimeout(typeEffect, 1000);
+
+    // --- NUMBER COUNTER ANIMATION ---
+    function animateCounter(el, target) {
+      const increment = target / 40;
+      let current = 0;
+      const update = setInterval(() => {
+        current += increment;
+        if (current >= target) { el.innerText = target; clearInterval(update); }
+        else { el.innerText = Math.ceil(current); }
+      }, 20);
+    }
+
+    // --- ROTATING QUOTES ---
+    const quotes = [
+      "Great events don't happen by accident — they're orchestrated by great organizers.",
+      "Every campus event is a chance to build memories that last a lifetime.",
+      "Behind every successful event is a team that planned, executed, and exceeded expectations.",
+      "The best administrators don't just manage — they inspire.",
+      "Data-driven decisions create extraordinary campus experiences.",
+      "A well-planned event speaks louder than a thousand announcements."
+    ];
+    let quoteIdx = 0;
+    function rotateQuote() {
+      quoteIdx = (quoteIdx + 1) % quotes.length;
+      const el = document.getElementById('adminQuote');
+      el.style.opacity = '0';
+      setTimeout(() => { el.innerText = '"' + quotes[quoteIdx] + '"'; el.style.opacity = '1'; }, 400);
+    }
+    setInterval(rotateQuote, 8000);
+
+    // Events
+    window.fetchAdminEvents = async () => {
+      const container = document.getElementById('eventsList');
+      const events = await loadEvents(container);
+      
+      populateEventSelects(events, ['analyticsEvent', 'appEvent', 'reportEvent', 'volSetupEvent', 'taskEvent', 'manualCheckinEvent', 'viewFeedbackEvent', 'volCheckinEvent']);
+
+      // Update stats
+      const evStat = document.getElementById('stat-events');
+      evStat.setAttribute('data-target', events.length);
+      animateCounter(evStat, events.length);
+
+      // Fetch total registrations for stats
+      const regs = await request('/registrations');
+      const regsStat = document.getElementById('stat-regs');
+      const regCount = (regs || []).length;
+      regsStat.setAttribute('data-target', regCount);
+      animateCounter(regsStat, regCount);
+
+      if (events.length === 0) return;
+      container.innerHTML = events.map(e => `
+        <div class="card" style="display:flex; flex-direction:column; padding:16px;">
+          <h3 class="card-title" style="margin-bottom: 8px;">${e.title}</h3>
+          <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:12px;">
+            <span style="font-size:12px; color:var(--text-muted);"><i class="fas fa-map-marker-alt"></i> ${e.venue}</span>
+            <span class="pill pill-purple">${e.availableSeats}/${e.capacity}</span>
+          </div>
+          <button class="btn btn-danger" style="font-size:12px; padding:6px 12px; width:100%; margin-top:auto;" onclick="delEvent(${e.id})">Archive Event</button>
+        </div>
+      `).join('');
+    };
+
+    window.publishNewEvent = async () => {
+      const title = document.getElementById('evTitle').value;
+      const venue = document.getElementById('evVenue').value;
+      const capacity = document.getElementById('evCapacity').value;
+      const categoryId = document.getElementById('evCat').value;
+      const eventDate = document.getElementById('evDate').value;
+      
+      if (!title || !venue || !capacity || !categoryId || !eventDate) {
+        return toast('Please fill all fields', 'error');
+      }
+
+      const data = {
+        title, venue, capacity: Number(capacity), categoryId: Number(categoryId),
+        eventDate: fmtSqlDate(eventDate), adminId: user.id
+      };
+      
+      const res = await request('/events', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+      
+      if (res) { 
+        toast('Event published!'); 
+        fetchAdminEvents(); 
+        document.getElementById('evTitle').value = '';
+        document.getElementById('evVenue').value = '';
+        document.getElementById('evCapacity').value = '';
+        document.getElementById('evDate').value = '';
+      }
+    };
+
+    window.delEvent = async (id) => {
+      if(!confirm("Archive event?")) return;
+      const res = await request(`/events?eventId=${id}`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email: user.email, role: user.role }) });
+      if(res) { toast('Event archived'); fetchAdminEvents(); }
+    };
+
+    // Analytics
+    let chartInstance = null;
+    window.loadAnalyticsData = async () => {
+      const eventId = document.getElementById('analyticsEvent').value;
+      if (!eventId) return;
+      const data = await request(`/analytics?eventId=${eventId}`);
+      if (!data) return;
+
+      document.getElementById('analyticsStats').innerHTML = `
+        <div class="card" style="padding:16px;">
+          <p class="section-title">Seats Filled %</p>
+          <p style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">Percentage of total capacity booked</p>
+          <div class="stat-num" style="color:var(--purple);">${data.fillRate}%</div>
+        </div>
+        <div class="card" style="padding:16px;">
+          <p class="section-title">Student Rating</p>
+          <p style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">Average feedback score (out of 5)</p>
+          <div class="stat-num" style="color:var(--amber);">${data.avgRating}</div>
+        </div>
+        <div class="card" style="padding:16px;">
+          <p class="section-title">Absent Students</p>
+          <p style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">Registered but didn't attend</p>
+          <div class="stat-num" style="color:var(--pink);">${data.noShows}</div>
+        </div>
+      `;
+
+      if (chartInstance) chartInstance.destroy();
+      const ctx = document.getElementById('analyticsChart').getContext('2d');
+      const isLight = document.body.classList.contains('light-theme');
+      const textColor = isLight ? '#1a1a2e' : '#e8e8f4';
+      
+      chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Seats Filled', 'Available', 'Absent'],
+          datasets: [{ data: [data.fillRate, 100 - data.fillRate, data.noShows], backgroundColor: ['#6555ff', isLight ? '#c0c0d0' : '#1e1e30', '#ff5a7e'], borderWidth: 0 }]
+        },
+        options: { plugins: { legend: { labels: { color: textColor, font: { size: 13, weight: '600' } } } }, cutout: '75%' }
+      });
+    };
+
+    // Volunteers
+    window.loadApps = async () => {
+      const eid = document.getElementById('appEvent').value;
+      if(!eid) return;
+      const apps = await request(`/volunteer/applications?eventId=${eid}`);
+      const box = document.getElementById('appsList');
+      if(!apps || apps.length === 0) { box.innerHTML = '<p class="empty-state">No applications.</p>'; return; }
+      
+      box.innerHTML = apps.map(a => `
+        <div class="feed-item fade-up-item">
+          <div class="feed-icon"><i class="fas fa-user-check"></i></div>
+          <div style="flex:1; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <b style="color:var(--text); font-size:14px;">User #${a.userId}</b>
+              <span class="pill ${a.status === 'APPROVED' ? 'pill-green' : 'pill-purple'}" style="margin-left:8px;">${a.status}</span>
+            </div>
+            ${a.status === 'PENDING' ? `
+              <div style="display:flex;gap:0.5rem">
+                <button onclick="revApp(${a.id}, 'APPROVED')" class="btn" style="padding:4px 10px;font-size:12px;">Approve</button>
+                <button onclick="revApp(${a.id}, 'REJECTED')" class="btn btn-danger" style="padding:4px 10px;font-size:12px;">Reject</button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    };
+
+    window.revApp = async (appId, status) => {
+      const res = await request('/volunteer/applications', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ appId, status }) });
+      if(res && res.message) { toast(res.message, res.message.toLowerCase().includes('failed') ? 'error' : 'success'); loadApps(); }
+    };
+
+    window.toggleClubSelect = () => {
+      const type = document.getElementById('volType').value;
+      document.getElementById('volClub').style.display = (type === 'CLUB_ONLY') ? 'block' : 'none';
+    };
+
+    window.savePolicy = async () => {
+      const eventId = document.getElementById('volSetupEvent').value;
+      const maxVol = document.getElementById('volMax').value;
+      const type = document.getElementById('volType').value;
+      const clubId = document.getElementById('volClub').value;
+
+      if(!eventId) return toast('Select event first', 'error');
+      if(!maxVol || maxVol <= 0) return toast('Set a valid max volunteers number', 'error');
+      if(type === 'CLUB_ONLY' && !clubId) return toast('Select a club', 'error');
+      
+      const res = await request('/volunteer/policy', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ eventId: Number(eventId), policyType: type, maxVolunteers: Number(maxVol), appMode: 'INDIVIDUAL', clubId: type === 'CLUB_ONLY' ? Number(clubId) : 0 })
+      });
+      if(res && res.message) toast(res.message, res.message.toLowerCase().includes('failed') ? 'error' : 'success');
+    };
+
+    window.createTeam = async () => {
+      const eventId = document.getElementById('volSetupEvent').value;
+      const teamName = document.getElementById('teamName').value;
+      const teamMax = document.getElementById('teamMax').value;
+      if(!eventId || !teamName || !teamMax || teamMax <= 0) return toast('Fill valid details', 'error');
+
+      const res = await request('/volunteer/teams', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ eventId: Number(eventId), teamName, maxMembers: Number(teamMax) })
+      });
+      if(res && res.message) {
+        toast(res.message, res.message.toLowerCase().includes('failed') ? 'error' : 'success');
+        if(!res.message.toLowerCase().includes('failed')) { document.getElementById('teamName').value = ''; document.getElementById('teamMax').value = ''; }
+      }
+    };
+
+    window.assignTask = async () => {
+      const eventId = document.getElementById('taskEvent').value;
+      const targetId = document.getElementById('taskUserId').value;
+      const title = document.getElementById('taskTitle').value;
+      const desc = document.getElementById('taskDesc').value;
+      if(!eventId || !targetId || !title || !desc) return toast('Fill all task fields', 'error');
+
+      const res = await request('/volunteer/tasks', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ eventId: Number(eventId), assignedTo: Number(targetId), title, description: desc, priority: 'MEDIUM', adminId: user.id })
+      });
+      if(res && res.message) {
+        toast(res.message, res.message.toLowerCase().includes('failed') ? 'error' : 'success');
+        if(!res.message.toLowerCase().includes('failed')) { document.getElementById('taskUserId').value = ''; document.getElementById('taskTitle').value = ''; document.getElementById('taskDesc').value = ''; }
+      }
+    };
+
+    window.adminVolCheckin = async () => {
+      const eventId = document.getElementById('volCheckinEvent').value;
+      const userId = document.getElementById('volUserId').value;
+      if(!eventId || !userId) return toast('Fill all fields', 'error');
+      const res = await request('/volunteer/attendance/checkin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ eventId: Number(eventId), userId: Number(userId), method: 'MANUAL' }) });
+      if(res && res.message) toast(res.message, res.message.toLowerCase().includes('success') ? 'success' : 'error');
+    };
+
+    window.adminVolCheckout = async () => {
+      const eventId = document.getElementById('volCheckinEvent').value;
+      const userId = document.getElementById('volUserId').value;
+      if(!eventId || !userId) return toast('Fill all fields', 'error');
+      const res = await request('/volunteer/attendance/checkout', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ eventId: Number(eventId), userId: Number(userId) }) });
+      if(res && res.message) toast(res.message, res.message.toLowerCase().includes('success') ? 'success' : 'error');
+    };
+
+    window.genReport = async () => {
+      const eid = document.getElementById('reportEvent').value;
+      if(!eid) return;
+      const data = await request(`/volunteer/report?eventId=${eid}`);
+      if(!data) return;
+      document.getElementById('reportBox').innerHTML = `
+        <div class="card" style="padding:16px;">
+          <p class="section-title">Total Volunteers</p>
+          <div class="stat-num">${data.totalVolunteers}</div>
+        </div>
+        <div class="card" style="padding:16px;">
+          <p class="section-title">Hours Logged</p>
+          <div class="stat-num">${data.totalHoursLogged}</div>
+        </div>
+      `;
+    };
+
+    // QR Code Scanner
+    let html5QrcodeScanner = null;
+    let isScanning = false;
+    window.startQR = () => {
+      if (html5QrcodeScanner) { html5QrcodeScanner.clear(); }
+      html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+      isScanning = true;
+      html5QrcodeScanner.render(async (decodedText) => {
+        if (!isScanning) return;
+        isScanning = false;
+        
+        document.getElementById('qrResult').innerHTML = `Scanned Data: <br><span style="color:var(--purple);">${decodedText}</span>`;
+        toast('QR Code Scanned!');
+        html5QrcodeScanner.clear();
+        
+        const res = await request('/qr/scan', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ qrData: decodedText }) });
+        if (res && res.message) { document.getElementById('qrResult').innerHTML += `<br><br><b>Status:</b> ${res.message}`; }
+      }, (error) => {});
+    };
+
+    window.stopQR = () => {
+      if (html5QrcodeScanner) { html5QrcodeScanner.clear(); document.getElementById('qrResult').innerHTML = 'Camera stopped.'; }
+    };
+
+    window.manualCheckin = async () => {
+      const eventId = document.getElementById('manualCheckinEvent').value;
+      const userId = document.getElementById('manualCheckinUserId').value;
+      if (!eventId || !userId) return toast('Missing event or user ID', 'error');
+      
+      const qrData = `EVT:${eventId}:USR:${userId}`;
+      const res = await request('/qr/scan', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ qrData }) });
+      if (res) toast('Checked in successfully!');
+    };
+
+    // History
+    window.loadHistory = async () => {
+      const data = await request('/history');
+      const box = document.getElementById('historyBox');
+      if (!data || data.length === 0) { box.innerHTML = '<p class="empty-state">No historical data.</p>'; return; }
+      box.innerHTML = data.map(h => `
+        <div class="feed-item fade-up-item">
+          <div class="feed-icon"><i class="fas fa-history"></i></div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <b style="color:var(--text); font-size:14px;">${h.title}</b>
+                <span class="pill pill-purple" style="margin-left:8px;">${h.category}</span>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span class="pill pill-green">${h.registered} Registered</span>
+                <span style="font-size:11px; color:var(--text-muted);">${h.year}</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:1rem; margin-top:6px; flex-wrap:wrap; align-items:center;">
+              <span style="font-size:12px; color:var(--text-muted);"><i class="fas fa-users" style="color:var(--purple)"></i> Capacity: ${h.capacity}</span>
+              <span style="font-size:12px; color:var(--text-muted);"><i class="fas fa-chart-line" style="color:var(--green)"></i> Fill: ${h.fillPct}</span>
+              <span style="font-size:12px; color:var(--text-muted);"><i class="fas fa-star" style="color:var(--amber)"></i> Rating: ${h.avgRating} (${h.totalReviews} reviews)</span>
+              <span style="font-size:12px; color:var(--text-muted);"><i class="fas fa-user-slash" style="color:var(--pink)"></i> Absent: ${h.noShows}</span>
+              <button class="btn" style="padding:4px 12px; font-size:12px; margin-left:auto;" onclick="downloadEventReport('${h.title.replace(/'/g, "\\'")}')"><i class="fas fa-file-pdf"></i> Download Report</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    // --- COMPREHENSIVE PDF REPORT ---
+    window.downloadEventReport = async (eventTitle) => {
+      const btn = event.currentTarget;
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+      btn.style.pointerEvents = 'none';
+
+      try {
+        // Fetch all events to find the eventId
+        const allEvents = await request('/events?');
+        const ev = (allEvents || []).find(e => e.title === eventTitle);
+        if (!ev) { toast('Event not found', 'error'); btn.innerHTML = originalHTML; btn.style.pointerEvents = ''; return; }
+        const eventId = ev.id;
+
+        // Fetch all data in parallel
+        const [regsData, analyticsData, feedbackData, volApps, volTasks, volReport, historyData] = await Promise.all([
+          request('/registrations'),
+          request(`/analytics?eventId=${eventId}`),
+          request(`/feedback?eventId=${eventId}`),
+          request(`/volunteer/applications?eventId=${eventId}`),
+          request(`/volunteer/tasks?eventId=${eventId}`),
+          request(`/volunteer/report?eventId=${eventId}`),
+          request(`/history`)
+        ]);
+
+        const eventRegs = (regsData || []).filter(r => r.eventId === eventId);
+        const historyEntry = (historyData || []).find(h => h.title === eventTitle);
+
+        // Build PDF using jsPDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 15;
+
+        // Header
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('EVENTORA', 105, y, { align: 'center' });
+        y += 8;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Campus Event Management System — Event Report', 105, y, { align: 'center' });
+        y += 4;
+        doc.setDrawColor(100, 85, 255);
+        doc.setLineWidth(0.5);
+        doc.line(20, y, 190, y);
+        y += 10;
+
+        // Event Info
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text(ev.title, 20, y);
+        y += 8;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        const evDateStr = ev.eventDate ? new Date(ev.eventDate).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' }) : 'N/A';
+        doc.text(`Venue: ${ev.venue}`, 20, y);
+        y += 5;
+        doc.text(`Event Date & Time: ${evDateStr}`, 20, y);
+        y += 5;
+        doc.text(`Capacity: ${ev.capacity} seats`, 20, y);
+        y += 7;
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        const genDate = new Date().toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'medium' });
+        doc.text(`Report Generated On: ${genDate}`, 20, y);
+        doc.setTextColor(0, 0, 0);
+        y += 10;
+
+        // Summary Stats
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Event Summary', 20, y);
+        y += 7;
+        doc.autoTable({
+          startY: y,
+          head: [['Metric', 'Value']],
+          body: [
+            ['Total Registrations', String(eventRegs.length)],
+            ['Present Students', analyticsData ? String(eventRegs.length - (analyticsData.noShows || 0)) : 'N/A'],
+            ['Seats Filled %', analyticsData ? analyticsData.fillRate + '%' : 'N/A'],
+            ['Average Rating', analyticsData ? String(analyticsData.avgRating) + '/5' : 'N/A'],
+            ['Total Reviews', historyEntry ? String(historyEntry.totalReviews) : 'N/A'],
+            ['Total Volunteers', volReport ? String(volReport.totalVolunteers) : '0'],
+            ['Volunteer Hours', volReport ? String(volReport.totalHoursLogged) : '0'],
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [101, 85, 255] },
+          margin: { left: 20, right: 20 },
+        });
+        y = doc.lastAutoTable.finalY + 10;
+
+        // Attendees List
+        if (eventRegs.length > 0) {
+          if (y > 250) { doc.addPage(); y = 20; }
+          doc.setFontSize(13);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Registered Attendees', 20, y);
+          y += 5;
+          doc.autoTable({
+            startY: y,
+            head: [['#', 'Name', 'Email', 'Status']],
+            body: eventRegs.map((r, i) => [i+1, r.userName || 'N/A', r.userEmail || 'N/A', r.status || 'Confirmed']),
+            theme: 'striped',
+            headStyles: { fillColor: [0, 170, 96] },
+            margin: { left: 20, right: 20 },
+          });
+          y = doc.lastAutoTable.finalY + 10;
+        }
+
+        // Volunteer Applications
+        if (volApps && volApps.length > 0) {
+          if (y > 250) { doc.addPage(); y = 20; }
+          doc.setFontSize(13);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Volunteer Applicants', 20, y);
+          y += 5;
+          doc.autoTable({
+            startY: y,
+            head: [['App ID', 'User ID', 'Team ID', 'Status']],
+            body: volApps.map(a => [a.id, a.userId, a.teamId || '-', a.status]),
+            theme: 'striped',
+            headStyles: { fillColor: [101, 85, 255] },
+            margin: { left: 20, right: 20 },
+          });
+          y = doc.lastAutoTable.finalY + 10;
+        }
+
+        // Tasks
+        if (volTasks && volTasks.length > 0) {
+          if (y > 250) { doc.addPage(); y = 20; }
+          doc.setFontSize(13);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Assigned / Completed Tasks', 20, y);
+          y += 5;
+          doc.autoTable({
+            startY: y,
+            head: [['Task ID', 'Title', 'Assigned To', 'Status', 'Priority', 'Assigned On', 'Last Updated']],
+            body: volTasks.map(t => {
+              const createdStr = t.createdAt ? new Date(t.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
+              const updatedStr = t.updatedAt ? new Date(t.updatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
+              return [t.id, t.title, t.assignedUserId || '-', t.status, t.priority, createdStr, updatedStr];
+            }),
+            theme: 'striped',
+            headStyles: { fillColor: [255, 180, 0], textColor: [0,0,0], fontSize: 8 },
+            bodyStyles: { fontSize: 8 },
+            margin: { left: 20, right: 20 },
+          });
+          y = doc.lastAutoTable.finalY + 10;
+        }
+
+        // Feedback
+        if (feedbackData && feedbackData.length > 0) {
+          if (y > 250) { doc.addPage(); y = 20; }
+          doc.setFontSize(13);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Student Feedback', 20, y);
+          y += 5;
+          doc.autoTable({
+            startY: y,
+            head: [['User ID', 'Rating', 'Comment', 'Date']],
+            body: feedbackData.map(f => [f.userId, f.rating + '/5', f.comment || '-', f.createdAt || 'N/A']),
+            theme: 'striped',
+            headStyles: { fillColor: [255, 90, 126] },
+            margin: { left: 20, right: 20 },
+            columnStyles: { 2: { cellWidth: 70 } },
+          });
+          y = doc.lastAutoTable.finalY + 10;
+        }
+
+        // Footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`EVENTORA Report — Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+        }
+
+        // Save
+        doc.save(`EVENTORA_Report_${eventTitle.replace(/\s+/g, '_')}.pdf`);
+        toast('Report downloaded! 📄');
+
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Report Downloaded';
+        btn.style.background = 'var(--green)';
+        setTimeout(() => { btn.innerHTML = originalHTML; btn.style.background = ''; btn.style.pointerEvents = ''; }, 4000);
+
+      } catch(err) {
+        console.error('Report Error:', err);
+        toast('Failed to generate report', 'error');
+        btn.innerHTML = originalHTML;
+        btn.style.pointerEvents = '';
+      }
+    };
+
+    // Feedback
+    window.loadFeedback = async () => {
+      const eid = document.getElementById('viewFeedbackEvent').value;
+      if (!eid) return;
+      const data = await request(`/feedback?eventId=${eid}`);
+      const box = document.getElementById('feedbackBox');
+      if (!data || data.length === 0) { box.innerHTML = '<p class="empty-state">No feedback found.</p>'; return; }
+      box.innerHTML = data.map(f => `
+        <div class="feed-item fade-up-item">
+          <div class="feed-icon" style="background:rgba(255,180,0,0.1); color:var(--amber);"><i class="fas fa-star"></i></div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <b style="color:var(--text); font-size:14px;">User #${f.userId}</b>
+              <span class="pill pill-purple">Rating: ${f.rating}/5</span>
+            </div>
+            <p style="margin:0; font-size:13px; color:var(--text-muted);">"${f.comments}"</p>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    async function init() {
+      const cats = await loadCategories();
+      populateSelect(document.getElementById('evCat'), cats, 'name', 'id');
+      const clubs = await loadClubs();
+      populateSelect(document.getElementById('volClub'), clubs, 'name', 'id', 'Select Club');
+      fetchAdminEvents();
+    }
+    init();
+  </script>
+</body>
+</html>

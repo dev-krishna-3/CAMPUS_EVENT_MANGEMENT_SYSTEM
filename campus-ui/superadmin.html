@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#6555ff"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Super Admin | EVENTORA</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <!-- Background Glow -->
+  <div style="position: fixed; top: 20%; left: 10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(101,85,255,0.05) 0%, transparent 70%); z-index: -2; pointer-events: none;"></div>
+  <div style="position: fixed; bottom: 10%; right: 5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(0,220,130,0.03) 0%, transparent 70%); z-index: -2; pointer-events: none;"></div>
+
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="brand"><img src="/logo.png" alt="Logo" style="height: 28px; width: auto; margin-right: 8px; vertical-align: middle; border-radius: 4px;"> EVENTORA</div>
+      <nav class="nav-links">
+        <button class="nav-btn active" onclick="showTab('events')"><i class="fas fa-calendar-alt"></i> Events</button>
+        <button class="nav-btn" onclick="showTab('volunteer')"><i class="fas fa-chart-line"></i> Volunteer Report</button>
+        <button class="nav-btn" onclick="showTab('audit')"><i class="fas fa-file-invoice"></i> Audit Logs</button>
+        <button class="nav-btn" onclick="showTab('users')"><i class="fas fa-users-cog"></i> Users & Roles</button>
+        <button class="nav-btn" onclick="showTab('clubs')"><i class="fas fa-university"></i> Clubs</button>
+        <button class="nav-btn logout" onclick="window.doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-nav">
+        <div>
+          <p class="section-title" style="margin-bottom: 4px;">Super Admin Portal</p>
+          <h2 class="card-title">System Oversight Terminal</h2>
+        </div>
+        <div class="avatar-wrapper">
+          <button class="theme-switch" onclick="toggleTheme()" title="Toggle Light/Dark Mode">
+            <i class="fas fa-moon" id="themeIcon"></i>
+          </button>
+          <div class="avatar-ring">
+            <div id="userInitials">SA</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- EVENTS TAB -->
+      <section id="tab-events" class="tab-content">
+
+        <!-- Bento Box Hero & Stats -->
+        <div class="bento-grid">
+          <!-- Hero Card (Span 2) -->
+          <div class="card bento-span-2" style="display:flex; flex-direction:column; justify-content:center; padding: 30px;">
+            <div class="blob blob-purple"></div>
+            <span class="pill pill-green" style="align-self:flex-start; margin-bottom: 1rem;">SUPER ADMIN TERMINAL</span>
+            <h1 class="hero-title">System Control.<br><span class="gradient-text" id="typewriter">Monitor.</span><span class="cursor" style="color:var(--text);animation:pulse 1s infinite;">|</span></h1>
+            <p style="margin-bottom: 1.5rem; max-width: 80%;">Full oversight of the EVENTORA platform. Manage users, clubs, audit trails, and ensure system integrity across all events.</p>
+            <div style="display:flex; gap: 1rem;">
+              <button class="btn" onclick="showTab('users');document.querySelectorAll('.nav-btn')[3].click();"><i class="fas fa-users-cog"></i> Manage Users</button>
+              <button class="btn btn-outline" onclick="showTab('audit');document.querySelectorAll('.nav-btn')[2].click();"><i class="fas fa-file-invoice"></i> Audit Logs</button>
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+            <div class="blob blob-green" style="top:-10px; right:-10px; bottom:auto;"></div>
+            <p class="section-title">Total Events</p>
+            <div class="stat-num counter" data-target="0" id="stat-events">0</div>
+            <p style="font-size: 12px; margin-top: 8px;"><i class="fas fa-calendar-check" style="color:var(--green)"></i> Active on system</p>
+          </div>
+
+          <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+            <p class="section-title">Total Users</p>
+            <div class="stat-num counter" data-target="0" id="stat-users">0</div>
+            <p style="font-size: 12px; margin-top: 8px;"><i class="fas fa-user-shield" style="color:var(--purple)"></i> Registered accounts</p>
+          </div>
+        </div>
+
+        <!-- Motivational Quote -->
+        <div class="card" style="margin-bottom: 1.5rem; padding: 16px 24px; display:flex; align-items:center; gap: 16px; border-left: 3px solid var(--pink);">
+          <i class="fas fa-shield-alt" style="font-size: 24px; color: var(--pink); opacity: 0.5;"></i>
+          <div>
+            <p id="saQuote" style="color:var(--text); font-size: 14px; font-weight: 500; font-style: italic; margin:0;">"A system's strength lies not in its features, but in the integrity of its oversight."</p>
+            <p style="font-size: 11px; margin: 4px 0 0 0; color:var(--text-dim);">— EVENTORA Platform</p>
+          </div>
+        </div>
+
+        <!-- All Events -->
+        <div class="card">
+          <div class="blob blob-purple"></div>
+          <h3 class="card-title" style="margin-bottom: 1rem;"><i class="fas fa-layer-group" style="color:var(--amber); margin-right:8px;"></i>All System Events</h3>
+          <div id="eventsList" class="grid-3">
+            <p class="loading-spinner">Loading events...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VOLUNTEER REPORT TAB -->
+      <section id="tab-volunteer" class="tab-content" style="display:none;">
+        <div class="card" style="max-width: 500px;">
+          <div class="blob blob-green"></div>
+          <h3 class="card-title" style="margin-bottom: 1rem;">Volunteer Report</h3>
+          <select id="reportEvent"></select>
+          <button class="btn" onclick="genReport()" style="width:100%; margin-top:1rem; margin-bottom:1rem;">Generate Report</button>
+          <div id="reportBox" class="bento-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:0;"></div>
+        </div>
+      </section>
+
+      <!-- AUDIT TAB -->
+      <section id="tab-audit" class="tab-content" style="display:none;">
+        <div class="card">
+          <div class="blob blob-purple" style="right: -20px; left: auto;"></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom: 1rem; align-items: center;">
+            <h3 class="card-title">System Audit Trail</h3>
+            <button class="btn btn-outline" onclick="loadAudit()"><i class="fas fa-sync"></i> Refresh</button>
+          </div>
+          <div id="auditLogs" style="max-height: 500px; overflow-y: auto;" class="feed-list">
+            <p class="loading-spinner">Loading audit logs...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- USERS & ROLES TAB -->
+      <section id="tab-users" class="tab-content" style="display:none;">
+        <div class="grid-2">
+          <div class="card">
+            <div class="blob blob-green"></div>
+            <h3 class="card-title" style="margin-bottom: 1rem;">Registered Users</h3>
+            <div id="usersList" class="feed-list" style="max-height:400px; overflow-y:auto;"></div>
+          </div>
+          <div class="card">
+            <div class="blob blob-purple"></div>
+            <h3 class="card-title" style="margin-bottom: 1rem;">Manage User Role</h3>
+            <select id="roleUserId"></select>
+            <select id="newRole">
+              <option value="student">Student</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button class="btn" onclick="updateRole()" style="width:100%; margin-top:1rem;">Update Role</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLUBS TAB -->
+      <section id="tab-clubs" class="tab-content" style="display:none;">
+        <div class="grid-2">
+          <div class="card">
+            <div class="blob blob-purple"></div>
+            <h3 class="card-title" style="margin-bottom: 1rem;">Create Club</h3>
+            <input type="text" id="clubName" placeholder="Club Name">
+            <textarea id="clubDesc" placeholder="Description"></textarea>
+            <button class="btn" onclick="createClub()" style="width:100%;">Create Club</button>
+            
+            <hr style="border:0; border-top:1px solid var(--border); margin: 2rem 0;">
+            
+            <h3 class="card-title" style="margin-bottom: 1rem;">Add Member to Club</h3>
+            <select id="addMemberClubId"></select>
+            <input type="number" id="addMemberUserId" placeholder="User ID">
+            <button class="btn btn-outline" onclick="addClubMember()" style="width:100%;">Add Member</button>
+          </div>
+          <div class="card">
+            <div class="blob blob-green"></div>
+            <h3 class="card-title" style="margin-bottom: 1rem;">Active Clubs</h3>
+            <div id="clubsList" class="feed-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireAuth, logout, request, toast, populateSelect } from '/src/api.js';
+    
+    const user = requireAuth();
+    if (user && user.role !== 'super_admin' && user.role !== 'superadmin') location.href = '/login.html';
+
+    window.doLogout = logout;
+
+    // --- THEME TOGGLE ---
+    window.toggleTheme = () => {
+      const isLight = document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      const icon = document.getElementById('themeIcon');
+      icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+    };
+    if(localStorage.getItem('theme') === 'light') { window.toggleTheme(); }
+
+    // Tabs
+    window.showTab = (id) => {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.getElementById('tab-' + id).style.display = 'block';
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      if (id === 'events') fetchEvents();
+      if (id === 'audit') loadAudit();
+      if (id === 'users') loadUsers();
+      if (id === 'clubs') loadClubs();
+    };
+
+    // --- TYPEWRITER EFFECT ---
+    const words = ["Monitor.", "Control.", "Secure.", "Scale.", "Govern."];
+    let wIdx = 0, charIdx = 0, isDeleting = false, twEl = document.getElementById('typewriter');
+    function typeEffect() {
+      const currentWord = words[wIdx];
+      if (isDeleting) {
+        twEl.innerText = currentWord.substring(0, charIdx - 1);
+        charIdx--;
+      } else {
+        twEl.innerText = currentWord.substring(0, charIdx + 1);
+        charIdx++;
+      }
+      let speed = isDeleting ? 50 : 100;
+      if (!isDeleting && charIdx === currentWord.length) {
+        speed = 2000; isDeleting = true;
+      } else if (isDeleting && charIdx === 0) {
+        isDeleting = false; wIdx = (wIdx + 1) % words.length; speed = 500;
+      }
+      setTimeout(typeEffect, speed);
+    }
+    setTimeout(typeEffect, 1000);
+
+    // --- NUMBER COUNTER ANIMATION ---
+    function animateCounter(el, target) {
+      const increment = target / 40;
+      let current = 0;
+      const update = setInterval(() => {
+        current += increment;
+        if (current >= target) { el.innerText = target; clearInterval(update); }
+        else { el.innerText = Math.ceil(current); }
+      }, 20);
+    }
+
+    // --- ROTATING QUOTES ---
+    const quotes = [
+      "A system's strength lies not in its features, but in the integrity of its oversight.",
+      "Full visibility. Full control. Full confidence.",
+      "Every log tells a story. Every audit builds trust.",
+      "The guardian of the platform ensures fairness for all.",
+      "Scalability begins with solid system governance.",
+      "Behind every smooth operation is an invisible guardian keeping watch."
+    ];
+    let quoteIdx = 0;
+    function rotateQuote() {
+      quoteIdx = (quoteIdx + 1) % quotes.length;
+      const el = document.getElementById('saQuote');
+      el.style.opacity = '0';
+      setTimeout(() => { el.innerText = '"' + quotes[quoteIdx] + '"'; el.style.opacity = '1'; }, 400);
+    }
+    setInterval(rotateQuote, 8000);
+
+    window.fetchEvents = async () => {
+      const container = document.getElementById('eventsList');
+      const events = await request('/events');
+      if (!events || events.length === 0) { container.innerHTML = '<p class="empty-state">No events found.</p>'; return; }
+      
+      populateSelect(document.getElementById('reportEvent'), events, 'title', 'id', 'Select Event');
+
+      // Update stats
+      const evStat = document.getElementById('stat-events');
+      evStat.setAttribute('data-target', events.length);
+      animateCounter(evStat, events.length);
+
+      // Fetch total users for stats
+      const users = await request('/users');
+      const usersStat = document.getElementById('stat-users');
+      const userCount = (users || []).length;
+      usersStat.setAttribute('data-target', userCount);
+      animateCounter(usersStat, userCount);
+
+      container.innerHTML = events.map(e => `
+        <div class="feed-item fade-up-item" style="flex-direction:column; align-items:flex-start; padding: 16px;">
+          <div style="display:flex; justify-content:space-between; width:100%;">
+            <b style="color:var(--text);">${e.title}</b>
+            <span class="pill pill-purple">${e.availableSeats}/${e.capacity}</span>
+          </div>
+          <button class="btn btn-danger" style="margin-top:12px; font-size:12px; padding:6px 12px;" onclick="delEvent(${e.id})">Delete Event</button>
+        </div>
+      `).join('');
+    };
+
+    window.delEvent = async (id) => {
+      if(!confirm("Are you sure you want to delete this event?")) return;
+      const res = await request(`/events?eventId=${id}`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email: user.email, role: user.role }) });
+      if(res) { toast('Event deleted'); fetchEvents(); }
+    };
+
+    window.genReport = async () => {
+      const eid = document.getElementById('reportEvent').value;
+      if(!eid) return toast('Select an event', 'error');
+      const data = await request(`/volunteer/report?eventId=${eid}`);
+      if(!data) return;
+      document.getElementById('reportBox').innerHTML = `
+        <div class="card" style="padding:16px;">
+          <p class="section-title">Total Volunteers</p>
+          <div class="stat-num">${data.totalVolunteers}</div>
+        </div>
+        <div class="card" style="padding:16px;">
+          <p class="section-title">Hours Logged</p>
+          <div class="stat-num">${data.totalHoursLogged}</div>
+        </div>
+      `;
+    };
+
+    window.loadAudit = async () => {
+      const logs = await request('/audit');
+      const box = document.getElementById('auditLogs');
+      if (!logs || logs.length === 0) { box.innerHTML = '<p class="empty-state">No audit logs found.</p>'; return; }
+      
+      box.innerHTML = logs.map(l => `
+        <div class="feed-item fade-up-item">
+          <div class="feed-icon" style="background:rgba(255,90,126,0.1); color:var(--pink);"><i class="fas fa-bolt"></i></div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between;">
+              <b style="color:var(--text); font-size:14px;">${l.userEmail}</b>
+              <span style="font-size:12px; color:var(--text-muted);">${l.createdAt.substring(0, 16)}</span>
+            </div>
+            <p style="margin:4px 0; font-size:13px;"><span class="pill pill-green">${l.action}</span> ${l.details || ''}</p>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    window.loadUsers = async () => {
+      const users = await request('/users');
+      const box = document.getElementById('usersList');
+      if (!users) return;
+      
+      populateSelect(document.getElementById('roleUserId'), users, 'email', 'id', 'Select User');
+      
+      box.innerHTML = users.map(u => `
+        <div class="feed-item fade-up-item">
+          <div class="feed-icon"><i class="fas fa-user"></i></div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <b style="color:var(--text); font-size:14px;">${u.name}</b>
+              <span class="pill ${u.role==='super_admin'?'pill-green':'pill-purple'}">${u.role}</span>
+            </div>
+            <p style="margin:4px 0 0 0; font-size:12px; color:var(--text-muted);">${u.email} (ID: ${u.id})</p>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    window.updateRole = async () => {
+      const userId = document.getElementById('roleUserId').value;
+      const role = document.getElementById('newRole').value;
+      if (!userId) return toast('Select a user', 'error');
+      
+      const res = await request('/users/role', {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ userId: Number(userId), role })
+      });
+      if (res) { toast('Role updated successfully!'); loadUsers(); }
+    };
+
+    window.loadClubs = async () => {
+      const clubs = await request('/clubs');
+      const box = document.getElementById('clubsList');
+      if (!clubs || clubs.length === 0) { box.innerHTML = '<p class="empty-state">No clubs active.</p>'; return; }
+      
+      populateSelect(document.getElementById('addMemberClubId'), clubs, 'name', 'id', 'Select Club');
+      
+      box.innerHTML = clubs.map(c => `
+        <div class="feed-item fade-up-item">
+          <div class="feed-icon" style="background:rgba(0,220,130,0.1); color:var(--green);"><i class="fas fa-users"></i></div>
+          <div style="flex:1;">
+            <b style="color:var(--text); font-size:14px;">${c.name}</b>
+            <p style="margin:4px 0 0 0; font-size:12px; color:var(--text-muted);">${c.description || 'No description'}</p>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    window.createClub = async () => {
+      const name = document.getElementById('clubName').value;
+      const desc = document.getElementById('clubDesc').value;
+      if (!name) return;
+      
+      const res = await request('/clubs', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ name, description: desc, adminId: user.id })
+      });
+      if (res) { toast('Club created!'); loadClubs(); }
+    };
+
+    window.addClubMember = async () => {
+      const clubId = document.getElementById('addMemberClubId').value;
+      const userId = document.getElementById('addMemberUserId').value;
+      if (!clubId || !userId) return toast('Fill all fields', 'error');
+      
+      const res = await request('/clubs/members', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ clubId: Number(clubId), userId: Number(userId) })
+      });
+      if (res) { toast('Member added to club!'); }
+    };
+
+    fetchEvents();
+  </script>
+</body>
+</html>

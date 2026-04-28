@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#6555ff"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Student Dashboard | EVENTORA</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/src/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</head>
+<body>
+  <!-- Background Glow -->
+  <div style="position: fixed; top: 20%; left: 10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(101,85,255,0.05) 0%, transparent 70%); z-index: -2; pointer-events: none;"></div>
+  <div style="position: fixed; bottom: 10%; right: 5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(0,220,130,0.03) 0%, transparent 70%); z-index: -2; pointer-events: none;"></div>
+
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="brand"><img src="/logo.png" alt="Logo" style="height: 28px; width: auto; margin-right: 8px; vertical-align: middle; border-radius: 4px;"> EVENTORA</div>
+      <nav class="nav-links">
+        <button class="nav-btn active" onclick="showTab('events')"><i class="fas fa-compass"></i> Discover</button>
+        <button class="nav-btn" onclick="showTab('tickets')"><i class="fas fa-ticket-alt"></i> My Tickets</button>
+        <button class="nav-btn" onclick="showTab('volunteer')"><i class="fas fa-hands-helping"></i> Volunteer</button>
+        <button class="nav-btn" onclick="showTab('feedback')"><i class="fas fa-comment-dots"></i> Feedback</button>
+        <button class="nav-btn logout" onclick="window.doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-nav">
+        <div>
+          <p class="section-title" style="margin-bottom: 4px;">Student Portal</p>
+          <h2 class="card-title">Welcome back, <span id="userName">Student</span></h2>
+        </div>
+        <div class="avatar-wrapper">
+          <button class="theme-switch" onclick="toggleTheme()" title="Toggle Light/Dark Mode">
+            <i class="fas fa-moon" id="themeIcon"></i>
+          </button>
+          <div class="avatar-ring">
+            <div id="userInitials">ST</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- EVENTS / DASHBOARD TAB -->
+      <section id="tab-events" class="tab-content">
+        
+        <!-- Bento Box Hero & Stats -->
+        <div class="bento-grid">
+          <!-- Hero Card (Span 2) -->
+          <div class="card bento-span-2" style="display:flex; flex-direction:column; justify-content:center; padding: 30px;">
+            <div class="blob blob-purple"></div>
+            <span class="pill pill-green" style="align-self:flex-start; margin-bottom: 1rem;">LIVE PLATFORM</span>
+            <h1 class="hero-title">Campus Events.<br><span class="gradient-text" id="typewriter">Register.</span><span class="cursor" style="color:var(--text);animation:pulse 1s infinite;">|</span></h1>
+            <p style="margin-bottom: 1.5rem; max-width: 80%;">Discover what's happening around campus, track your volunteer hours, and connect with peers.</p>
+            <div style="display:flex; gap: 1rem;">
+              <button class="btn" onclick="document.getElementById('searchQ').focus()"><i class="fas fa-search"></i> Explore</button>
+              <button class="btn btn-outline" onclick="showTab('tickets')">My Tickets</button>
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+            <div class="blob blob-green" style="top:-10px; right:-10px; bottom:auto;"></div>
+            <p class="section-title">Registered</p>
+            <div class="stat-num counter" data-target="0" id="stat-registered">0</div>
+            <p style="font-size: 12px; margin-top: 8px;"><i class="fas fa-arrow-up" style="color:var(--green)"></i> Active tickets</p>
+          </div>
+          
+          <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+            <p class="section-title">Vol. Hours</p>
+            <div class="stat-num counter" data-target="0" id="stat-hours">0</div>
+            <p style="font-size: 12px; margin-top: 8px;"><i class="fas fa-award" style="color:var(--amber)"></i> Total recorded</p>
+          </div>
+        </div>
+
+        <!-- Motivational Quote -->
+        <div class="card" style="margin-bottom: 1.5rem; padding: 16px 24px; display:flex; align-items:center; gap: 16px; border-left: 3px solid var(--green);">
+          <i class="fas fa-lightbulb" style="font-size: 24px; color: var(--green); opacity: 0.5;"></i>
+          <div>
+            <p id="studentQuote" style="color:var(--text); font-size: 14px; font-weight: 500; font-style: italic; margin:0;">"Your campus experience is shaped by the events you attend and the people you meet."</p>
+            <p style="font-size: 11px; margin: 4px 0 0 0; color:var(--text-dim);">— EVENTORA Platform</p>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 1rem;">
+          <h3 class="card-title">Upcoming Events</h3>
+          <div style="display:flex; gap:1rem;">
+            <select id="catFilter" style="width:160px; margin:0;" onchange="fetchEvents()"></select>
+            <input type="text" id="searchQ" placeholder="Search..." style="margin:0; width:160px;" onkeyup="if(event.key==='Enter')fetchEvents()">
+          </div>
+        </div>
+        
+        <div id="eventsList" class="grid-3"></div>
+
+        <!-- Recent Registrations -->
+        <div class="card" style="margin-top: 1rem;">
+          <h3 class="card-title"><i class="fas fa-bell" style="color:var(--amber); margin-right:8px;"></i>My Recent Registrations</h3>
+          <div class="feed-list" id="recentRegistrations">
+            <p class="empty-state">No registrations yet. Start exploring events above!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TICKETS TAB -->
+      <section id="tab-tickets" class="tab-content" style="display:none;">
+        <div class="card">
+          <div class="blob blob-purple"></div>
+          <h3 class="card-title" style="margin-bottom: 1rem;">Your Registered Events</h3>
+          <div id="ticketsList" style="margin-top:1rem;"></div>
+        </div>
+      </section>
+
+      <!-- VOLUNTEER TAB -->
+      <section id="tab-volunteer" class="tab-content" style="display:none;">
+        <div class="grid-2">
+          <div class="card">
+            <div class="blob blob-green"></div>
+            <h3 class="card-title" style="margin-bottom: 1rem;">Apply to Volunteer</h3>
+            <select id="volEvent"></select>
+            <textarea id="volNote" placeholder="Why do you want to join?"></textarea>
+            <button class="btn" id="btnApplyVol" onclick="applyVol()" style="width:100%">Submit Application</button>
+          </div>
+          <div class="card">
+            <h3 class="card-title" style="margin-bottom: 1rem;">Attendance Desk</h3>
+            <select id="attendEvent"></select>
+            <div style="display:flex; gap:1rem;">
+              <button class="btn" id="btnCheckin" onclick="volCheckin()" style="flex:1">Check In</button>
+              <button class="btn btn-danger" id="btnCheckout" onclick="volCheckout()" style="flex:1">Check Out</button>
+            </div>
+          </div>
+          <div class="card bento-span-2">
+            <h3 class="card-title" style="margin-bottom: 1rem;">My Volunteer Status & Tasks</h3>
+            <div style="display:flex; gap:1rem; margin-bottom: 1rem;">
+              <select id="myStatusEvent" style="flex:1; margin:0;"></select>
+              <button class="btn btn-outline" onclick="checkMyStatus()">Check Status</button>
+              <button class="btn btn-outline" onclick="loadMyTasks()">Load Tasks</button>
+            </div>
+            <div id="myStatusBox"></div>
+            <div id="myTasksBox" style="margin-top:1rem;"></div>
+            
+            <hr style="border:0; border-top:1px solid var(--border); margin: 2rem 0;">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+              <h3 class="card-title">Task Activity Log</h3>
+              <button class="btn btn-outline" onclick="fetchCertificates()"><i class="fas fa-award"></i> My Certificates</button>
+            </div>
+            <div style="display:flex; gap:1rem;">
+              <input type="number" id="taskId" placeholder="Task ID">
+              <input type="number" id="taskHours" placeholder="Hours">
+            </div>
+            <textarea id="taskLog" placeholder="What did you work on?"></textarea>
+            <button class="btn" id="btnLogActivity" onclick="submitLog()" style="width:100%">Log Activity</button>
+            <div id="certList" style="margin-top:1rem;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEEDBACK TAB -->
+      <section id="tab-feedback" class="tab-content" style="display:none;">
+        <div class="card" style="max-width: 500px;">
+          <div class="blob blob-purple"></div>
+          <h3 class="card-title" style="margin-bottom: 1rem;">Event Feedback</h3>
+          <select id="feedbackEvent"></select>
+          <input type="number" id="feedbackRating" min="1" max="5" placeholder="Rating (1-5)">
+          <textarea id="feedbackComment" placeholder="Leave your comments..."></textarea>
+          <button class="btn" id="btnFeedback" onclick="submitFeedback()" style="width:100%">Submit Feedback</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- QR Download Modal -->
+  <div id="qrModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
+    <div class="card" style="max-width:360px; text-align:center; padding:30px;">
+      <h3 class="card-title" style="margin-bottom:1rem;">Your Event QR Code</h3>
+      <p style="font-size:12px; margin-bottom:1rem;">Present this at the venue for check-in</p>
+      <canvas id="qrCanvas" style="margin:0 auto 1rem; display:block; border-radius:8px;"></canvas>
+      <div style="display:flex; gap:1rem;">
+        <button class="btn" id="btnDownloadQR" onclick="downloadQR()" style="flex:1;"><i class="fas fa-download"></i> Download</button>
+        <button class="btn btn-outline" onclick="closeQRModal()" style="flex:1;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, logout, request, toast, loadEvents, loadCategories, populateSelect, populateEventSelects, formatDate } from '/src/api.js';
+    
+    const user = requireAuth();
+    if (user && user.role !== 'student') location.href = '/login.html';
+    
+    document.getElementById('userName').innerText = user?.name || 'Student';
+    if(user?.name) {
+      document.getElementById('userInitials').innerText = user.name.substring(0,2).toUpperCase();
+    }
+
+    window.doLogout = logout;
+
+    // --- THEME TOGGLE ---
+    window.toggleTheme = () => {
+      const isLight = document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      const icon = document.getElementById('themeIcon');
+      icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+    };
+    if(localStorage.getItem('theme') === 'light') {
+      window.toggleTheme(); // Apply saved theme
+    }
+
+    // --- TYPEWRITER EFFECT ---
+    const words = ["Register.", "Connect.", "Volunteer.", "Discover."];
+    let wIdx = 0, charIdx = 0, isDeleting = false, twEl = document.getElementById('typewriter');
+    function typeEffect() {
+      const currentWord = words[wIdx];
+      if (isDeleting) {
+        twEl.innerText = currentWord.substring(0, charIdx - 1);
+        charIdx--;
+      } else {
+        twEl.innerText = currentWord.substring(0, charIdx + 1);
+        charIdx++;
+      }
+
+      let speed = isDeleting ? 50 : 100;
+      if (!isDeleting && charIdx === currentWord.length) {
+        speed = 2000; isDeleting = true;
+      } else if (isDeleting && charIdx === 0) {
+        isDeleting = false; wIdx = (wIdx + 1) % words.length; speed = 500;
+      }
+      setTimeout(typeEffect, speed);
+    }
+    setTimeout(typeEffect, 1000);
+
+    // --- ROTATING QUOTES ---
+    const studentQuotes = [
+      "Your campus experience is shaped by the events you attend and the people you meet.",
+      "Every event is a doorway to new skills, friendships, and unforgettable memories.",
+      "Volunteering isn't just giving time — it's investing in your own growth.",
+      "The best stories from college come from the events you almost didn't attend.",
+      "Connect. Collaborate. Celebrate. That's what campus life is all about.",
+      "Don't just attend events — create the moments that define your journey."
+    ];
+    let sqIdx = 0;
+    setInterval(() => {
+      sqIdx = (sqIdx + 1) % studentQuotes.length;
+      const el = document.getElementById('studentQuote');
+      el.style.opacity = '0';
+      setTimeout(() => { el.innerText = '"' + studentQuotes[sqIdx] + '"'; el.style.opacity = '1'; }, 400);
+    }, 8000);
+
+    // --- NUMBER COUNTER ANIMATION ---
+    function animateCounters() {
+      document.querySelectorAll('.counter').forEach(el => {
+        const target = +el.getAttribute('data-target');
+        const increment = target / 50; // 50 steps
+        let current = 0;
+        const update = setInterval(() => {
+          current += increment;
+          if (current >= target) { el.innerText = target; clearInterval(update); }
+          else { el.innerText = Math.ceil(current); }
+        }, 16);
+      });
+    }
+
+    // --- UNIVERSAL BUTTON SUCCESS FEEDBACK ---
+    function btnSuccess(btn, successText, revertMs = 3000) {
+      if (!btn) return;
+      const originalHTML = btn.innerHTML;
+      const originalBg = btn.style.background;
+      const originalPointer = btn.style.pointerEvents;
+      btn.innerHTML = `<i class="fas fa-check-circle"></i> ${successText}`;
+      btn.style.background = 'var(--green)';
+      btn.style.pointerEvents = 'none';
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.style.background = originalBg;
+        btn.style.pointerEvents = originalPointer;
+      }, revertMs);
+    }
+
+    // --- STORE REGISTERED EVENT IDS ---
+    let registeredEventIds = new Set();
+
+    // --- TABS LOGIC ---
+    window.showTab = (id) => {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.getElementById('tab-' + id).style.display = 'block';
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      if (id === 'tickets') fetchTickets();
+    };
+
+    // --- DATA FETCHING ---
+    window.fetchEvents = async () => {
+      const container = document.getElementById('eventsList');
+      const events = await loadEvents(container, {
+        categoryId: document.getElementById('catFilter').value,
+        query: document.getElementById('searchQ').value
+      });
+      
+      populateEventSelects(events, ['volEvent', 'attendEvent', 'feedbackEvent', 'myStatusEvent']);
+
+      if (events.length === 0) return;
+      
+      container.innerHTML = events.map((e, i) => {
+        const capacityPct = e.capacity > 0 ? Math.round(((e.capacity - e.availableSeats) / e.capacity) * 100) : 0;
+        const isRegistered = registeredEventIds.has(e.id);
+        return `
+        <div class="card" style="margin-bottom:0; display:flex; flex-direction:column;">
+          <div class="blob ${i%2===0 ? 'blob-purple' : 'blob-green'}" style="top:-10px; left:-10px;"></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+            <span class="pill pill-purple">Event</span>
+            <span style="font-size:12px; color:var(--text-muted);"><i class="fas fa-calendar"></i> ${formatDate(e.eventDate).split(',')[0]}</span>
+          </div>
+          <h3 class="card-title" style="margin-bottom: 8px;">${e.title}</h3>
+          <p style="font-size:12px; margin-bottom:auto;"><i class="fas fa-map-marker-alt"></i> ${e.venue}</p>
+          
+          <div style="margin-top: 16px; margin-bottom: 16px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px;">
+              <span>Capacity</span>
+              <span style="color:var(--text); font-weight:600;">${e.availableSeats} left</span>
+            </div>
+            <div class="progress-bg">
+              <div class="progress-bar" id="bar-${e.id}" data-width="${capacityPct}%"></div>
+            </div>
+          </div>
+
+          ${isRegistered 
+            ? `<div class="btn" style="width:100%; background: var(--green); cursor: default; pointer-events:none;"><i class="fas fa-check-circle"></i> Registered</div>`
+            : `<button class="btn" style="width:100%;" onclick="registerForEvent(${e.id}, '${e.title.replace(/'/g, "\\'")}')">Register Now</button>`
+          }
+        </div>
+      `}).join('');
+
+      // Trigger capacity bar animations
+      setTimeout(() => {
+        events.forEach(e => {
+          const bar = document.getElementById(`bar-${e.id}`);
+          if(bar) bar.style.width = bar.getAttribute('data-width');
+        });
+      }, 100);
+    };
+
+    window.registerForEvent = async (eventId, title) => {
+      if (!eventId) return toast('Invalid event', 'error');
+      const res = await request('/registrations', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ userId: user.id, eventId })
+      });
+      if (res) { 
+        toast('Registered successfully! 🎉'); 
+        registeredEventIds.add(eventId);
+        fetchEvents(); fetchTickets(); 
+        // Update stats visually
+        const statReg = document.getElementById('stat-registered');
+        statReg.innerText = parseInt(statReg.innerText) + 1;
+      }
+    };
+
+    window.fetchTickets = async () => {
+      const box = document.getElementById('ticketsList');
+      box.innerHTML = '<p class="loading-spinner">Loading tickets...</p>';
+      const allRegs = await request('/registrations');
+      if (!allRegs) return;
+      
+      const myRegs = allRegs.filter(r => r.userId === user.id);
+      document.getElementById('stat-registered').innerText = myRegs.length;
+      
+      // Track registered event IDs for the "Registered" button logic (Bug 1 fix)
+      registeredEventIds = new Set(myRegs.map(r => r.eventId));
+      
+      if (myRegs.length === 0) {
+        box.innerHTML = '<p class="empty-state">No tickets yet.</p>';
+        return;
+      }
+      box.innerHTML = myRegs.map(r => `
+        <div class="feed-item fade-up-item" style="margin-bottom:8px;">
+          <div class="feed-icon" style="background:rgba(0,220,130,0.1); color:var(--green);"><i class="fas fa-ticket-alt"></i></div>
+          <div style="flex:1;">
+            <p style="color:var(--text); font-size:14px; margin:0; font-weight:600;">${r.eventTitle || 'Event #'+r.eventId}</p>
+            <p style="font-size:12px; margin:0;">Status: <span class="pill pill-green" style="font-size:10px;">Confirmed</span></p>
+          </div>
+          <button class="btn" id="btnQR-${r.eventId}" style="padding: 6px 14px; font-size: 12px;" onclick="showQRCode(${r.eventId}, '${(r.eventTitle || 'Event').replace(/'/g, "\\'")}')"><i class="fas fa-qrcode"></i> Download QR</button>
+        </div>
+      `).join('');
+      
+      // Also populate "Recent Registrations" on Discover tab
+      const recentBox = document.getElementById('recentRegistrations');
+      if(myRegs.length > 0) {
+        recentBox.innerHTML = myRegs.slice(0, 4).map(r => `
+          <div class="feed-item fade-up-item">
+            <div class="feed-icon"><i class="fas fa-check-circle"></i></div>
+            <div style="flex:1;">
+              <p style="color:var(--text); font-size:13px; margin:0;">${r.eventTitle || 'Event #'+r.eventId}</p>
+              <p style="font-size:11px; margin:0;">Registered</p>
+            </div>
+          </div>
+        `).join('');
+      }
+    };
+
+    // --- QR CODE DOWNLOAD (Bug 5 fix) ---
+    let currentQREventTitle = '';
+    let currentQREventId = null;
+    window.showQRCode = async (eventId, eventTitle) => {
+      currentQREventTitle = eventTitle;
+      currentQREventId = eventId;
+      try {
+        const res = await request(`/qr/data?userId=${user.id}&eventId=${eventId}`);
+        if(!res || !res.qrData) { toast('QR code not found. Try re-registering.', 'error'); return; }
+        
+        const canvas = document.getElementById('qrCanvas');
+        const qr = new QRious({
+          element: canvas,
+          value: res.qrData,
+          size: 260,
+          backgroundAlpha: 1,
+          foreground: '#000000',
+          background: '#ffffff',
+          level: 'H'
+        });
+        
+        document.getElementById('qrModal').style.display = 'flex';
+      } catch(err) {
+        console.error('QR Error:', err);
+        toast('Failed to generate QR code', 'error');
+      }
+    };
+    
+    window.downloadQR = () => {
+      const canvas = document.getElementById('qrCanvas');
+      const link = document.createElement('a');
+      link.download = `EVENTORA_QR_${currentQREventTitle.replace(/\s+/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      toast('QR Code downloaded!');
+      btnSuccess(document.getElementById('btnDownloadQR'), 'Downloaded');
+      // Also update the ticket list button
+      if (currentQREventId) {
+        const ticketBtn = document.getElementById(`btnQR-${currentQREventId}`);
+        if (ticketBtn) btnSuccess(ticketBtn, 'Downloaded', 5000);
+      }
+    };
+
+    window.closeQRModal = () => {
+      document.getElementById('qrModal').style.display = 'none';
+    };
+
+    // VOLUNTEER API FUNCTIONS (Preserved logic)
+    window.applyVol = async () => {
+      const eventId = document.getElementById('volEvent').value;
+      const note = document.getElementById('volNote').value;
+      if (!eventId) return toast('Select an event', 'error');
+      if (!note) return toast('Please enter a note', 'error');
+      const res = await request('/volunteer/apply', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ eventId: Number(eventId), userId: user.id, teamId: 0, note }) });
+      if (res && res.message) { toast(res.message, res.message.toLowerCase().includes('submitted') ? 'success' : 'error'); if(res.message.toLowerCase().includes('submitted')) { document.getElementById('volNote').value = ''; btnSuccess(document.getElementById('btnApplyVol'), 'Submitted'); } }
+    };
+    window.volCheckin = async () => {
+      const eventId = document.getElementById('attendEvent').value;
+      if (!eventId) return toast('Select an event', 'error');
+      const res = await request('/volunteer/attendance/checkin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ eventId: Number(eventId), userId: user.id, method: 'MANUAL' }) });
+      if (res && res.message) { toast(res.message, res.message.toLowerCase().includes('success') ? 'success' : 'error'); if(res.message.toLowerCase().includes('success')) btnSuccess(document.getElementById('btnCheckin'), 'Checked In'); }
+    };
+    window.volCheckout = async () => {
+      const eventId = document.getElementById('attendEvent').value;
+      if (!eventId) return toast('Select an event', 'error');
+      const res = await request('/volunteer/attendance/checkout', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ eventId: Number(eventId), userId: user.id }) });
+      if (res && res.message) { toast(res.message, res.message.toLowerCase().includes('success') ? 'success' : 'error'); if(res.message.toLowerCase().includes('success')) btnSuccess(document.getElementById('btnCheckout'), 'Checked Out'); }
+    };
+    window.checkMyStatus = async () => {
+      const eid = document.getElementById('myStatusEvent').value;
+      if (!eid) return;
+      const apps = await request(`/volunteer/applications?eventId=${eid}`);
+      const myApp = (apps || []).find(a => a.userId === user.id);
+      const box = document.getElementById('myStatusBox');
+      if (!myApp) { box.innerHTML = '<p class="empty-state">No application found.</p>'; return; }
+      box.innerHTML = `<div class="feed-item" style="margin-top:8px;"><b>Status:</b> <span class="pill ${myApp.status==='APPROVED'?'pill-green':''}">${myApp.status}</span></div>`;
+    };
+    window.loadMyTasks = async () => {
+      const eid = document.getElementById('myStatusEvent').value;
+      if (!eid) return;
+      const tasks = await request(`/volunteer/tasks?eventId=${eid}`);
+      const myTasks = (tasks || []).filter(t => t.assignedUserId === user.id);
+      const box = document.getElementById('myTasksBox');
+      if (!myTasks.length) { box.innerHTML = '<p class="empty-state">No tasks assigned.</p>'; return; }
+      box.innerHTML = myTasks.map(t => `
+        <div class="feed-item fade-up-item" style="margin-bottom:8px; flex-direction:column; align-items:flex-start;">
+          <div style="display:flex; justify-content:space-between; width:100%;"><b>#${t.id} - ${t.title}</b><span class="pill ${t.status==='DONE'?'pill-green':''}">${t.status}</span></div>
+          <p style="font-size:13px;">${t.description}</p>
+          ${t.status !== 'DONE' ? `<div style="display:flex; gap:8px; margin-top:8px;"><button class="btn btn-outline" style="padding:4px 8px; font-size:12px;" onclick="updateTask(${t.id}, 'IN_PROGRESS', this)">In Progress</button><button class="btn" style="padding:4px 8px; font-size:12px;" onclick="updateTask(${t.id}, 'DONE', this)">Complete</button></div>` : ''}
+        </div>
+      `).join('');
+    };
+    // BUG 6 FIX: Added userId to the request body
+    window.updateTask = async (taskId, newStatus, btnEl) => {
+      const res = await request('/volunteer/tasks/status', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ taskId, userId: user.id, status: newStatus }) });
+      if (res && res.message) { toast(res.message, res.message.toLowerCase().includes('updated') ? 'success' : 'error'); if(res.message.toLowerCase().includes('updated')) { if(btnEl) btnSuccess(btnEl, 'Updated'); setTimeout(() => loadMyTasks(), 2000); } }
+    };
+    window.submitLog = async () => {
+      const taskId = document.getElementById('taskId').value;
+      const hours = document.getElementById('taskHours').value;
+      const logText = document.getElementById('taskLog').value;
+      if (!taskId || !logText) return toast('Fill task ID and log', 'error');
+      const res = await request('/volunteer/tasks/logs', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ taskId: Number(taskId), userId: user.id, logText, hours: Number(hours||0) }) });
+      if (res) { 
+        toast('Log submitted!'); document.getElementById('taskLog').value = ''; document.getElementById('taskHours').value = '';
+        const statHrs = document.getElementById('stat-hours');
+        statHrs.innerText = parseInt(statHrs.innerText) + Number(hours||0);
+        btnSuccess(document.getElementById('btnLogActivity'), 'Logged');
+      }
+    };
+    window.fetchCertificates = async () => {
+      const box = document.getElementById('certList');
+      const eid = document.getElementById('myStatusEvent').value;
+      if (!eid) return toast('Select an event first', 'error');
+      const data = await request(`/volunteer/certificate?eventId=${eid}&userId=${user.id}`);
+      if (!data || data.error || data.eligible === 'false') { box.innerHTML = `<p class="empty-state">${data?.error || data?.reason || 'Not eligible yet.'}</p>`; return; }
+      const rewardName = data.reward === 'EXCELLENCE_AWARD' ? 'Excellence Award 🏆' : 'Volunteer Certificate 🏅';
+      box.innerHTML = `<div class="feed-item" style="margin-top:8px;"><b><i class="fas fa-award" style="color:var(--amber)"></i> ${rewardName}</b><span style="font-size:12px; margin-left:auto;">Issued</span></div>`;
+    };
+    window.submitFeedback = async () => {
+      const eventId = document.getElementById('feedbackEvent').value;
+      const rating = document.getElementById('feedbackRating').value;
+      const comments = document.getElementById('feedbackComment').value;
+      if (!eventId || !rating) return toast('Missing fields', 'error');
+      const res = await request('/feedback', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ eventId: Number(eventId), userId: user.id, rating: Number(rating), comments }) });
+      if (res) { toast('Feedback submitted!'); document.getElementById('feedbackComment').value = ''; document.getElementById('feedbackRating').value = ''; btnSuccess(document.getElementById('btnFeedback'), 'Submitted'); }
+    };
+
+    // --- INIT ---
+    async function init() {
+      const cats = await loadCategories();
+      populateSelect(document.getElementById('catFilter'), cats, 'name', 'id', 'All Categories');
+      await fetchTickets(); // Populate registeredEventIds first
+      await fetchEvents();  // Then render events with correct button state
+      animateCounters(); // Run animations after data load
+    }
+    init();
+  </script>
+</body>
+</html>

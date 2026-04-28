@@ -45,14 +45,14 @@ public class VolunteerService {
             "SELECT va.*, u.name AS user_name, u.email AS user_email, vt.team_name " +
             "FROM volunteer_applications va " +
             "JOIN users u ON u.id = va.user_id " +
-            "JOIN volunteer_teams vt ON vt.id = va.team_id " +
+            "LEFT JOIN volunteer_teams vt ON vt.id = va.team_id " +
             "WHERE va.event_id = ? ORDER BY va.applied_at DESC";
 
     private static final String MY_APPLICATIONS_SQL =
             "SELECT va.*, e.title AS event_title, vt.team_name " +
             "FROM volunteer_applications va " +
             "JOIN events e ON e.id = va.event_id " +
-            "JOIN volunteer_teams vt ON vt.id = va.team_id " +
+            "LEFT JOIN volunteer_teams vt ON vt.id = va.team_id " +
             "WHERE va.user_id = ? ORDER BY va.applied_at DESC";
 
     private static final String UPDATE_APPLICATION_SQL =
@@ -161,6 +161,7 @@ public class VolunteerService {
      * Individual application — single student applies to a team.
      */
     public String applyIndividual(int eventId, int userId, int teamId, String note) {
+        System.out.println("[VolunteerService] applyIndividual: eventId=" + eventId + ", userId=" + userId + ", teamId=" + teamId);
         // Check policy eligibility
         String eligibility = checkEligibility(eventId, userId);
         if (eligibility != null) return eligibility;
@@ -175,7 +176,11 @@ public class VolunteerService {
              PreparedStatement ps = con.prepareStatement(INSERT_APPLICATION_SQL)) {
             ps.setInt(1, eventId);
             ps.setInt(2, userId);
-            ps.setInt(3, teamId);
+            if (teamId > 0) {
+                ps.setInt(3, teamId);
+            } else {
+                ps.setNull(3, java.sql.Types.INTEGER);
+            }
             ps.setString(4, "INDIVIDUAL");
             ps.setNull(5, java.sql.Types.INTEGER);
             ps.setString(6, note);
@@ -349,7 +354,7 @@ public class VolunteerService {
      */
     private String checkEligibility(int eventId, int userId) {
         String[] policy = getPolicy(eventId);
-        if (policy == null) return "No volunteer policy found for this event.";
+        if (policy == null) return "No volunteer policy found for Event ID: " + eventId + ". Please contact admin.";
 
         String policyType = policy[0];
         int clubId = Integer.parseInt(policy[3]);
