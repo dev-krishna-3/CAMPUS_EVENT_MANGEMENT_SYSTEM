@@ -1,8 +1,16 @@
 package service;
 import model.User;
 import java.util.regex.Pattern;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Random;
 
 public class Authservice {
+    
+    // ==================== OTP STATE ====================
+    private static final Map<String, String> otpStorage = new ConcurrentHashMap<>();
+    private static final Map<String, Long> otpTimestamps = new ConcurrentHashMap<>();
+    private static final long OTP_VALIDITY_MS = 15 * 60 * 1000; // 15 minutes
     
     // ==================== PASSWORD VALIDATION AGENT ====================
     // Validates password against all security requirements
@@ -156,6 +164,69 @@ public class Authservice {
         }
     }
     
+    // ==================== PASSWORD RESET AGENT ====================
+    public SignupResult requestPasswordReset(String email, Userservice userservice, EmailService emailService) {
+        EmailValidationResult emailVal = validateEmail(email);
+        if (!emailVal.isValid()) {
+            return new SignupResult(false, "Invalid email format");
+        }
+        
+        User user = userservice.findByEmail(email);
+        if (user == null) {
+            return new SignupResult(false, "Email not found in our system");
+        }
+        
+        // Generate 6-digit OTP
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        
+        otpStorage.put(email, otp);
+        otpTimestamps.put(email, System.currentTimeMillis());
+        
+        String subject = "Password Reset Request";
+        String body = "Hello " + user.getName() + ",\n\n" +
+                      "Your OTP for password reset is: " + otp + "\n" +
+                      "This OTP is valid for 15 minutes.\n\n" +
+                      "If you did not request this, please ignore this email.";
+                      
+        boolean emailSent = emailService.sendEmail(email, subject, body);
+        if (emailSent) {
+            return new SignupResult(true, "OTP sent to your email successfully.");
+        } else {
+            return new SignupResult(false, "Failed to send OTP email. Please try again later.");
+        }
+    }
+
+    public SignupResult resetPassword(String email, String otp, String newPassword, Userservice userservice) {
+        if (!otpStorage.containsKey(email) || !otpTimestamps.containsKey(email)) {
+            return new SignupResult(false, "No password reset requested for this email");
+        }
+        
+        long timestamp = otpTimestamps.get(email);
+        if (System.currentTimeMillis() - timestamp > OTP_VALIDITY_MS) {
+            otpStorage.remove(email);
+            otpTimestamps.remove(email);
+            return new SignupResult(false, "OTP has expired. Please request a new one.");
+        }
+        
+        if (!otpStorage.get(email).equals(otp)) {
+            return new SignupResult(false, "Invalid OTP");
+        }
+        
+        PasswordValidationResult passVal = validatePassword(newPassword);
+        if (!passVal.isValid()) {
+            return new SignupResult(false, passVal.getMessage());
+        }
+        
+        boolean updated = userservice.updatePassword(email, newPassword);
+        if (updated) {
+            otpStorage.remove(email);
+            otpTimestamps.remove(email);
+            return new SignupResult(true, "Password has been successfully reset. You can now login.");
+        } else {
+            return new SignupResult(false, "Failed to update password. Please try again.");
+        }
+    }
+
     // ==================== NESTED RESULT CLASSES ====================
     
     /**

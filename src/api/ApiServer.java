@@ -34,6 +34,8 @@ public class ApiServer {
         server.createContext("/api/events", new EventsHandler());
         server.createContext("/api/login", new LoginHandler());
         server.createContext("/api/register", new RegisterHandler());
+        server.createContext("/api/forgot-password", new ForgotPasswordHandler());
+        server.createContext("/api/reset-password", new ResetPasswordHandler());
         server.createContext("/api/users", new UsersHandler());
         server.createContext("/api/registrations", new RegistrationsHandler());
         server.createContext("/api/qr/scan", new QRScanHandler());
@@ -377,6 +379,88 @@ public class ApiServer {
 
                 Authservice.SignupResult result = authService.signup(name, email, password, confirmPassword, role,
                         userService);
+
+                String resp = String.format("{\"success\": %b, \"message\": \"%s\"}",
+                        result.isSuccess(),
+                        SimpleJson.escape(result.getMessage()));
+                sendResponse(exchange, result.isSuccess() ? 200 : 400, resp);
+            } catch (Exception e) {
+                e.printStackTrace();
+                sendResponse(exchange, 500, "{\"error\": \"Server Error\"}");
+            }
+        }
+    }
+
+    static class ForgotPasswordHandler implements HttpHandler {
+        private final Authservice authService = new Authservice();
+        private final Userservice userService = new Userservice();
+        private final service.EmailService emailService = new service.EmailService();
+
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                sendResponse(exchange, 204, "");
+                return;
+            }
+
+            if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\": \"Method not allowed\"}");
+                return;
+            }
+
+            try (InputStream is = exchange.getRequestBody()) {
+                String body = new String(is.readAllBytes(), "UTF-8");
+                Map<String, String> json = SimpleJson.parse(body);
+
+                String email = json.get("email");
+                if (email == null) {
+                    sendResponse(exchange, 400, "{\"success\": false, \"message\": \"Email is required\"}");
+                    return;
+                }
+
+                Authservice.SignupResult result = authService.requestPasswordReset(email, userService, emailService);
+
+                String resp = String.format("{\"success\": %b, \"message\": \"%s\"}",
+                        result.isSuccess(),
+                        SimpleJson.escape(result.getMessage()));
+                sendResponse(exchange, result.isSuccess() ? 200 : 400, resp);
+            } catch (Exception e) {
+                e.printStackTrace();
+                sendResponse(exchange, 500, "{\"error\": \"Server Error\"}");
+            }
+        }
+    }
+
+    static class ResetPasswordHandler implements HttpHandler {
+        private final Authservice authService = new Authservice();
+        private final Userservice userService = new Userservice();
+
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                sendResponse(exchange, 204, "");
+                return;
+            }
+
+            if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                sendResponse(exchange, 405, "{\"error\": \"Method not allowed\"}");
+                return;
+            }
+
+            try (InputStream is = exchange.getRequestBody()) {
+                String body = new String(is.readAllBytes(), "UTF-8");
+                Map<String, String> json = SimpleJson.parse(body);
+
+                String email = json.get("email");
+                String otp = json.get("otp");
+                String newPassword = json.get("newPassword");
+
+                if (email == null || otp == null || newPassword == null) {
+                    sendResponse(exchange, 400, "{\"success\": false, \"message\": \"Email, OTP, and new password are required\"}");
+                    return;
+                }
+
+                Authservice.SignupResult result = authService.resetPassword(email, otp, newPassword, userService);
 
                 String resp = String.format("{\"success\": %b, \"message\": \"%s\"}",
                         result.isSuccess(),

@@ -1,5 +1,5 @@
 # SMTP Configuration for Email Notifications
-# Fill in your details below
+# Copy this file as email_config.properties and fill in your details
 
 # Host for SMTP (e.g., smtp.gmail.com)
 smtp.host=smtp.gmail.com
@@ -8,12 +8,12 @@ smtp.host=smtp.gmail.com
 smtp.port=587
 
 # Authentication
-smtp.user=krishnaanasane281@gmail.com
+smtp.user=your-email@gmail.com
 # Use an "App Password" for Gmail, NOT your regular account password
-smtp.password=bogvvxwubgcsncqz
+smtp.password=YOUR_APP_PASSWORD_HERE
 
 # From address
-smtp.from=krishnaanasane281@gmail.com
+smtp.from=your-email@gmail.com
 
 # Use TLS (true/false)
 smtp.tls=true

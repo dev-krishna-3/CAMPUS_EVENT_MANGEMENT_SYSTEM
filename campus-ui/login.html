@@ -23,10 +23,44 @@
       
       <form id="loginForm">
         <input type="email" id="email" placeholder="Email Address" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">
+        <div style="position: relative; margin-bottom: 12px;">
+          <input type="password" id="password" placeholder="Password" required style="margin-bottom: 0; padding-right: 40px;">
+          <i class="fas fa-eye" id="togglePassword" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+        </div>
+        <div style="text-align: right; margin-bottom: 1rem;">
+          <a href="#" id="showForgotBtn" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">Forgot Password?</a>
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">
           Sign In <i class="fas fa-arrow-right"></i>
         </button>
+      </form>
+
+      <!-- Forgot Password Form -->
+      <form id="forgotPasswordForm" style="display: none;">
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Enter your email to receive an OTP.</p>
+        <input type="email" id="fpEmail" placeholder="Email Address" required>
+        <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">
+          Send OTP <i class="fas fa-paper-plane"></i>
+        </button>
+        <div style="text-align: center; margin-top: 1rem;">
+          <a href="#" id="backToLoginBtn1" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;"><i class="fas fa-arrow-left"></i> Back to Login</a>
+        </div>
+      </form>
+
+      <!-- Reset Password Form -->
+      <form id="resetPasswordForm" style="display: none;">
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Check your email for the OTP.</p>
+        <input type="text" id="rpOtp" placeholder="6-digit OTP" required maxlength="6">
+        <div style="position: relative; margin-bottom: 12px;">
+          <input type="password" id="rpPassword" placeholder="New Password" required style="margin-bottom: 0; padding-right: 40px;">
+          <i class="fas fa-eye" id="toggleRpPassword" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+        </div>
+        <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">
+          Reset Password <i class="fas fa-check"></i>
+        </button>
+        <div style="text-align: center; margin-top: 1rem;">
+          <a href="#" id="backToLoginBtn2" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;"><i class="fas fa-arrow-left"></i> Back to Login</a>
+        </div>
       </form>
       
       <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
@@ -37,10 +71,61 @@
   </div>
   
   <script type="module">
-    import { login, redirectByRole } from '/src/api.js';
+    import { login, redirectByRole, request, toast } from '/src/api.js';
     
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    const togglePassword = document.getElementById('togglePassword');
+    const password = document.getElementById('password');
+    if (togglePassword && password) {
+        togglePassword.addEventListener('click', function () {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    }
+
+    const toggleRpPassword = document.getElementById('toggleRpPassword');
+    const rpPassword = document.getElementById('rpPassword');
+    if (toggleRpPassword && rpPassword) {
+        toggleRpPassword.addEventListener('click', function () {
+            const type = rpPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+            rpPassword.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    const fpForm = document.getElementById('forgotPasswordForm');
+    const rpForm = document.getElementById('resetPasswordForm');
+    const formTitle = document.querySelector('h2');
+    const formSubtitle = document.querySelector('h2 + p');
+
+    // UI Toggles
+    document.getElementById('showForgotBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        loginForm.style.display = 'none';
+        fpForm.style.display = 'block';
+        formTitle.textContent = 'Reset Password';
+        formSubtitle.textContent = 'Get a verification code via email';
+    });
+
+    const backToLogin = (e) => {
+        e.preventDefault();
+        fpForm.style.display = 'none';
+        rpForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        formTitle.textContent = 'Welcome Back';
+        formSubtitle.textContent = 'Sign in to your campus portal';
+    };
+
+    document.getElementById('backToLoginBtn1').addEventListener('click', backToLogin);
+    document.getElementById('backToLoginBtn2').addEventListener('click', backToLogin);
+
+    // Login Submit
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
       const btn = e.target.querySelector('button');
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
       btn.disabled = true;
@@ -54,6 +139,63 @@
         btn.innerHTML = 'Sign In <i class="fas fa-arrow-right"></i>';
         btn.disabled = false;
       }
+    });
+
+    // Forgot Password Submit
+    fpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+      btn.disabled = true;
+      
+      const email = document.getElementById('fpEmail').value;
+      const res = await request('/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      
+      if (res && res.success) {
+        toast('OTP Sent! Check your email.', 'success');
+        fpForm.style.display = 'none';
+        rpForm.style.display = 'block';
+        formTitle.textContent = 'Enter OTP';
+        formSubtitle.textContent = 'Verify your identity to proceed';
+      }
+      
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    });
+
+    // Reset Password Submit
+    rpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+      btn.disabled = true;
+      
+      const email = document.getElementById('fpEmail').value;
+      const otp = document.getElementById('rpOtp').value;
+      const newPassword = document.getElementById('rpPassword').value;
+      
+      const res = await request('/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp, newPassword })
+      });
+      
+      if (res && res.success) {
+        toast('Password reset successful! Please login.', 'success');
+        rpForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        formTitle.textContent = 'Welcome Back';
+        formSubtitle.textContent = 'Sign in to your campus portal';
+      }
+      
+      btn.innerHTML = originalText;
+      btn.disabled = false;
     });
   </script>
   <script>

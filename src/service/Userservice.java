@@ -29,6 +29,22 @@ public class Userservice {
                     "VALUES (?, ?, ?, (SELECT id FROM roles WHERE role_name = ?)) " +
                     "ON DUPLICATE KEY UPDATE id = id";
 
+    private static final String UPDATE_PASSWORD_SQL =
+            "UPDATE users SET password = ? WHERE email = ?";
+
+    public boolean updatePassword(String email, String newPassword) {
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(UPDATE_PASSWORD_SQL)) {
+            ps.setString(1, newPassword);
+            ps.setString(2, email);
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException ex) {
+            System.out.println("[ERROR] updatePassword failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
     public void addUser(User u){
         try (Connection con = DBConnection.getConnection();
                 PreparedStatement ps = con.prepareStatement(INSERT_SQL)) {

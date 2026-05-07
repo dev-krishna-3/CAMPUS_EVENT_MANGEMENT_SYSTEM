@@ -10,13 +10,22 @@ bin/
 .classpath/
 *.iml
 *.iws
+.vscode/
 
 # Ignore OS files
 Thumbs.db
 Desktop.ini
+desktop.ini
 
-# Ignore Frontend junk (for when your teammate joins)
+# Ignore Frontend junk
 node_modules/
 dist/
 build/
 .env
+
+# ===== SENSITIVE FILES — NEVER COMMIT =====
+src/email_config.properties
+src/database/db.properties
+
+# Ignore QR code generated files
+src/qrcodes/
